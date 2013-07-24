@@ -1,12 +1,21 @@
 <?php
 
-    // header('Content-Type: text/HTML; charset=utf-8');
-    // header('Content-Encoding: none;');
-    // session_start();
-    // ob_end_flush();
-    // ob_start();
-    // set_time_limit(0);
-    // error_reporting(0);
+// Configuration
+define('MIN_SIZE', 3);
+define('MAX_SIZE', 9);
+define('DB_HOST', '127.0.0.1');
+define('DB_USER', 'root');
+define('DB_PASSWORD', '');
+define('DB_DATABASE', 'english_words');
+define('AUTO_SCROLL', false);
+
+header('Content-Type: text/HTML; charset=utf-8');
+header('Content-Encoding: none;');
+session_start();
+ob_end_flush();
+ob_start();
+set_time_limit(0);
+error_reporting(0);
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -18,7 +27,20 @@
 
 
     <style>
-    * { font-family: "Courier New", Courier, monospace; }
+    * {
+        font-family: "Courier New", Courier, monospace;
+    }
+    body {
+        margin: 0;
+        padding-left: 50px;
+    }
+    .words {
+        font-size: 50px;
+        line-height: 60px;
+        font-weight: bold;
+        color: #222;
+        letter-spacing: 4px;
+    }
     .board {
         width: 250px;
         position: fixed;
@@ -38,8 +60,16 @@
         margin: 2px;
     }
     </style>
+    <?php if (AUTO_SCROLL) : ?>
+    <script>
+    function pageScroll() {
+        window.scrollBy(0, 60); // horizontal and vertical scroll increments
+        scrolldelay = setTimeout('pageScroll()',  7000); // scrolls every 7 seconds
+    }
+    </script>
+    <?php endif ?>
   </head>
-  <body>
+  <body onLoad="pageScroll()">
 
 <?php if (empty($_POST)) : ?>
     <h1>Ruzzle Finder</h1>
@@ -55,12 +85,9 @@
 
 <?php
 
-define('MAX_WORD', 4);
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASSWORD', '');
-define('DB_DATABASE', 'english_words');
+// System constants
 define('DEBUG', false);
+define('MAX_WORD', 4);
 
 function d($string)
 {
@@ -92,9 +119,10 @@ if (
         '<span>' . implode('</span><span>', str_split($_POST['line2'])) . '</span>' .
         '<span>' . implode('</span><span>', str_split($_POST['line3'])) . '</span>' .
         '<span>' . implode('</span><span>', str_split($_POST['line4'])) . '</span>' .
-        '</div>';
+        '</div>
+        <div class="words">';
 
-    $sql = 'SELECT * FROM french WHERE size > 3 AND size < 10';// ORDER BY size DESC';
+    $sql = 'SELECT * FROM french WHERE size > ' . MIN_SIZE . ' AND size < ' . MAX_SIZE; // . ' ORDER BY size DESC';
     $table = mysql_query($sql, $bdd);
     $tableaux =  array();
 
@@ -169,24 +197,57 @@ if (
     }
 
     $save = array();
+    $span_idx=1;
     while ($data = mysql_fetch_array($table)) {
         $mot = str_split($data['word']);
-            if (algo($tableaux, $mot, 0, $save)) {
-                if ($count > 100) {
-                    break;
-                }
-                $result[] = $data['word'];
-                //echo $result[$count] . '<br>';
-                //ob_flush();
-                //flush();
-                $count++;
+        if (algo($tableaux, $mot, 0, $save)) {
+            if ($count > 100) {
+                break;
             }
+
+            $result[] = $data['word'];
+            // echo '<span class="word">' . $result[$count] . '</span>';
+            // ob_flush();
+            // flush();
+
+            $count++;
+        }
+        $span_idx++;
+    }
+
+    function similar($word1, $word2)
+    {
+        if (abs(strlen($word1) - strlen($word2)) > 1) {
+            return false;
+        }
+        else {
+            $diff = 0;
+            for ($i = 0, $max = min(strlen($word1), strlen($word2)); $i < $max; $i++) {
+                if ($word1[$i] != $word2[$i]) {
+                    $diff++;
+                }
+                if ($diff > 1) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     sort($result);
+    $prev = "";
     foreach ($result as $value) {
-        echo $value . "<br>";
+        if (similar($prev, $value)) {
+            echo " - ";
+        }
+        else {
+            echo "<br>";
+        }
+        echo '<span>' . $value . '</span>';
+        $prev = $value;
     }
+
+    echo '</div>';
 }
 else {
     die('ERROR LINE EMPTY');
