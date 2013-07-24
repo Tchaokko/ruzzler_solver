@@ -1,26 +1,13 @@
 <?php
 
-    header('Content-Type: text/HTML; charset=utf-8');
-    header('Content-Encoding: none;');
-    session_start();
-    ob_end_flush();
-    ob_start();
-    set_time_limit(0);
-    error_reporting(0);
-
-    // while (true) {
-    //     sleep (1);
-    //     echo 'ok<br />';
-    //     ob_flush();
-    //     flush();
-    // }
-
-    // exit;
-
-    // header('Content-Type: text/html; charset=UTF-8');
-    // error_reporting(E_ALL);
-    // set_time_limit(100);
+    // header('Content-Type: text/HTML; charset=utf-8');
+    // header('Content-Encoding: none;');
+    // session_start();
+    // ob_end_flush();
     // ob_start();
+    // set_time_limit(0);
+    // error_reporting(0);
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
@@ -107,7 +94,7 @@ if (
         '<span>' . implode('</span><span>', str_split($_POST['line4'])) . '</span>' .
         '</div>';
 
-    $sql = 'SELECT * FROM french WHERE size > 5 AND size < 9 ORDER BY size DESC';
+    $sql = 'SELECT * FROM french WHERE size > 3 AND size < 10';// ORDER BY size DESC';
     $table = mysql_query($sql, $bdd);
     $tableaux =  array();
 
@@ -169,7 +156,7 @@ if (
 
     function algo($tableaux, $mot, $nbr, $save)
     {
-        for ($count2 = 0; $count2 < MAX_WORD; $count2++)  {
+        for ($count2 = 0; $count2 < MAX_WORD; $count2++) {
             for ($count3 = 0; $count3 < MAX_WORD; $count3++) {
                 if ($tableaux[$count2][$count3] == $mot[$nbr]) {
                     $save[$count2][$count3] = true;
@@ -186,14 +173,19 @@ if (
         $mot = str_split($data['word']);
             if (algo($tableaux, $mot, 0, $save)) {
                 if ($count > 100) {
-                    exit();
+                    break;
                 }
-                $result[$count] = $data['word'];
-                echo $result[$count] . '<br>';
-                ob_flush();
-                flush();
+                $result[] = $data['word'];
+                //echo $result[$count] . '<br>';
+                //ob_flush();
+                //flush();
                 $count++;
             }
+    }
+
+    sort($result);
+    foreach ($result as $value) {
+        echo $value . "<br>";
     }
 }
 else {
