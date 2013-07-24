@@ -1,4 +1,6 @@
 <?php
+define('MIN_SIZE', 3);
+define('MAX_SIZE', 9);
 
     header('Content-Type: text/HTML; charset=utf-8');
     header('Content-Encoding: none;');
@@ -32,6 +34,18 @@
 
     <style>
     * { font-family: "Courier New", Courier, monospace; }
+    body {
+        margin: 0;
+        padding-left: 50px;
+    }
+    .word {
+        font-size: 50px;
+        line-height: 60px;
+        display: block;
+        font-weight: bold;
+        color: #222;
+        letter-spacing: 4px;
+    }
     .board {
         width: 250px;
         position: fixed;
@@ -51,8 +65,14 @@
         margin: 2px;
     }
     </style>
+    <script>
+    function pageScroll() {
+        window.scrollBy(0, 60); // horizontal and vertical scroll increments
+        scrolldelay = setTimeout('pageScroll()',7000); // scrolls every 100 milliseconds
+    }
+    </script>
   </head>
-  <body>
+  <body onLoad="pageScroll()">
 
 <?php if (empty($_POST)) : ?>
     <h1>Ruzzle Finder</h1>
@@ -69,7 +89,7 @@
 <?php
 
 define('MAX_WORD', 4);
-define('DB_HOST', 'localhost');
+define('DB_HOST', '127.0.0.1');
 define('DB_USER', 'root');
 define('DB_PASSWORD', '');
 define('DB_DATABASE', 'english_words');
@@ -107,7 +127,7 @@ if (
         '<span>' . implode('</span><span>', str_split($_POST['line4'])) . '</span>' .
         '</div>';
 
-    $sql = 'SELECT * FROM french WHERE size > 5 AND size < 9 ORDER BY size DESC';
+    $sql = 'SELECT * FROM french WHERE size > '.MIN_SIZE.' AND size < '.MAX_SIZE.' ORDER BY size DESC';
     $table = mysql_query($sql, $bdd);
     $tableaux =  array();
 
@@ -182,6 +202,7 @@ if (
     }
 
     $save = array();
+    $span_idx=1;
     while ($data = mysql_fetch_array($table)) {
         $mot = str_split($data['word']);
             if (algo($tableaux, $mot, 0, $save)) {
@@ -189,11 +210,12 @@ if (
                     exit();
                 }
                 $result[$count] = $data['word'];
-                echo $result[$count] . '<br>';
+                echo '<span id="',$span_idx,'" class="word">',$result[$count],'</span>';
                 ob_flush();
                 flush();
                 $count++;
             }
+        $span_idx++;
     }
 }
 else {
